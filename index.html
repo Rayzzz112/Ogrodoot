@@ -1,12 +1,1202 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <title>Ogrodoot</title>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Rajshahi Road Rush — Highway Edition</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;background:#101918;color:#fff;
+  font-family:system-ui,sans-serif;
+}
+main{width:min(100%,650px);margin:auto;padding:12px}
+h1{font-size:23px;margin:4px 0;color:#ffdc86;text-align:center}
+.subtitle{text-align:center;color:#a9c3b5;font-size:12px;margin:7px}
+.game{
+  position:relative;overflow:hidden;border:2px solid #b59457;
+  border-radius:18px;background:#7ca6ac;isolation:isolate;
+}
+canvas{display:block;width:100%;height:auto;aspect-ratio:600/760}
+.hud{
+  position:absolute;top:10px;left:10px;right:10px;
+  display:flex;gap:6px;justify-content:space-between;
+  pointer-events:none;
+}
+.stat{
+  background:#102520df;border:1px solid #ffffff22;
+  padding:7px 10px;border-radius:10px;font-size:11px;
+}
+.stat b{display:block;color:#ffde86;font-size:17px}
+.toolbar{
+  position:absolute;right:10px;top:73px;display:flex;gap:6px;
+}
+button{
+  border:1px solid #ffffff35;border-radius:12px;
+  background:#17392de8;color:white;
+  font:700 14px system-ui;padding:10px 13px;
+  cursor:pointer;touch-action:none;user-select:none;
+  -webkit-user-select:none;
+}
+button:active{transform:scale(.96)}
+button:focus-visible{outline:3px solid #ffde86}
+button:disabled{opacity:.4}
+.toolbar button{padding:8px;font-size:12px}
+.controls{
+  position:absolute;bottom:13px;left:12px;right:12px;
+  display:flex;justify-content:space-between;align-items:flex-end;
+  gap:10px;
+}
+.steer,.weapons{display:flex;gap:7px}
+.controls button{
+  min-width:52px;min-height:54px;
+  box-shadow:0 4px 0 #091611aa;
+}
+#boost{background:#cfaa46;color:#152619;min-height:65px}
+#bomb{background:#a33d2ce8}
+#stick{background:#806036ed}
+.overlay{
+  position:absolute;inset:0;display:grid;place-items:center;
+  background:#071810b8;backdrop-filter:blur(3px);
+}
+.overlay.hidden{display:none}
+.card{
+  width:85%;max-width:400px;text-align:center;
+  border:1px solid #d1b07166;border-radius:20px;
+  padding:24px;background:#10261fec;
+}
+.card h2{font-size:27px;color:#ffdb85;margin:0 0 12px}
+.card p{font-size:14px;line-height:1.7;color:#c2d2c8}
+.primary{background:#e4bd63;color:#14271b;padding:13px 28px}
+#caption{
+  position:absolute;bottom:96px;left:8%;right:8%;
+  text-align:center;background:#0a211be8;border-radius:10px;
+  color:#ffe5a0;padding:10px;pointer-events:none;font-size:16px;
+}
+#caption:empty{display:none}
+.info{font-size:12px;line-height:1.7;color:#b8cabf;text-align:center}
+details{
+  margin:14px 0;background:#1b3028;
+  border:1px solid #365245;border-radius:12px;padding:14px;
+}
+summary{cursor:pointer;font-weight:bold;color:#ffdc86}
+.voice-row{padding:12px 0;border-bottom:1px solid #ffffff16}
+.voice-row label{display:block;font-size:13px;margin-bottom:7px}
+.voice-row input{width:100%;font-size:12px;color:#bdd0c3}
+.voice-row small{display:block;color:#96d8aa;margin-top:5px}
+.help{font-size:12px;color:#b5c7bb;line-height:1.7}
+@media(max-width:420px){
+  main{padding:5px}
+  .controls{left:7px;right:7px;gap:5px}
+  .controls button{min-width:42px;padding:8px;font-size:12px}
+  .steer,.weapons{gap:4px}
+  .stat{padding:6px 8px}
+  #caption{font-size:13px;bottom:90px}
+}
+</style>
 </head>
+
 <body>
-    <h1>Welcome to Ogrodoot!</h1>
-    <p>My first project on GitHub.</p>
+<main>
+<h1>RAJSHAHI ROAD RUSH</h1>
+<p class="subtitle">HIGHWAY EDITION · 100 LEVELS · PSEUDO-3D</p>
+
+<div class="game">
+  <canvas id="canvas" width="600" height="760"></canvas>
+
+  <div class="hud">
+    <div class="stat">POINTS<b id="points">0</b></div>
+    <div class="stat">LEVEL<b id="level">1 / 100</b></div>
+    <div class="stat">SPEED<b id="speed">0</b></div>
+    <div class="stat">HITS<b id="hits">0</b></div>
+  </div>
+
+  <div class="toolbar">
+    <button id="pause" aria-label="Pause">Ⅱ</button>
+    <button id="mute" aria-label="Toggle sound">Sound ON</button>
+    <button id="restart" aria-label="Restart">↻</button>
+  </div>
+
+  <div id="caption"></div>
+
+  <div class="controls">
+    <div class="steer">
+      <button id="left" aria-label="Steer left">◀</button>
+      <button id="right" aria-label="Steer right">▶</button>
+    </div>
+
+    <button id="boost">▲<br>BOOST</button>
+
+    <div class="weapons">
+      <button id="stick">🏏<br>লাঠি</button>
+      <button id="bomb">💣<br>Bomb</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h2 id="overlayTitle">READY TO DRIVE?</h2>
+      <p id="overlayText">
+        রিকশা +২০ · Faculty NPC +৫০<br>
+        পুলিশে ধাক্কা = Game Over<br>
+        BOOST ধরে রাখলে গতি বাড়বে।
+      </p>
+      <button id="play" class="primary">▶ PLAY</button>
+    </div>
+  </div>
+</div>
+
+<p class="info">
+  ← → / A D: Steering · ↑ / W: Boost<br>
+  Space: Bomb · J: লাঠি · H: Horn · P: Pause<br>
+  কাল্পনিক cartoon NPC এবং রাজশাহী-অনুপ্রাণিত রাস্তা।
+</p>
+
+<details id="voicePanel">
+  <summary>🎙 Voice Setup — মানুষের recording যোগ করো</summary>
+  <p class="help">
+    PD, জুনু ও মেরাজের জন্য তিনজন আলাদা মানুষের কণ্ঠে
+    নিচের কথাগুলো record করে MP3/WAV হিসেবে দাও।
+    প্রতিটি file-এ একটি dialogue থাকবে। Recording না থাকলে
+    subtitle ও game sound চলবে। Refresh করলে file আবার দিতে হবে।
+  </p>
+  <div id="voiceInputs"></div>
+</details>
+</main>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const canvas = $("canvas");
+const ctx = canvas.getContext("2d");
+const W = 600, H = 760, HORIZON = 160;
+
+const keys = new Set();
+const holds = new Set();
+
+const LOCATIONS = [
+  "সাহেব বাজার", "পদ্মার পাড়", "তালাইমারী",
+  "রুয়েট", "কাজলা", "লক্ষ্মীপুর"
+];
+
+const DIALOGUES = {
+  pd: [
+    "ইরাসমাস মুন্ডাস",
+    "ইন্টারনেট থেকে পড়বা",
+    "এআই ইউজ করা ভালো না।"
+  ],
+  junu: [
+    "আমি আনস্মার্ট নাকি?",
+    "আপনি হাসেন না কেনো",
+    "আপনারা আবার বলে দিয়েন না হেডস্যার কে।"
+  ],
+  meraj: [
+    "আমাকে কি স্যার মনে হয় না।"
+  ]
+};
+
+const NAMES = {
+  pd: "পিডি ফ্যাকুল্টি",
+  junu: "জুনু ফ্যাকুল্টি",
+  meraj: "মেরাজ ফ্যাকুল্টি"
+};
+
+const clips = {};
+let voicePlayer = null;
+let voiceQueue = [];
+let captionText = "", captionTime = 0;
+let voiceTurn = {pd:0, junu:0, meraj:0};
+
+let state = "ready";
+let playerX = 0;
+let score = 0, hitCount = 0, level = 1;
+let distance = 0, speed = 0;
+let targets = [], bombs = [], effects = [], popups = [];
+let spawnTime = 0.5;
+let bombCD = 0, stickCD = 0, swing = 0;
+let hornCD = 0;
+let levelBanner = 0;
+let last = null, muted = false;
+
+let audio = null, engine = null, engineGain = null;
+
+// ================= HUMAN VOICE FILES =================
+
+for (const [person, lines] of Object.entries(DIALOGUES)) {
+  lines.forEach((line, index) => {
+    const row = document.createElement("div");
+    row.className = "voice-row";
+
+    const inputId = `voice-${person}-${index}`;
+    const label = document.createElement("label");
+    label.htmlFor = inputId;
+    label.textContent = `${NAMES[person]} — ${line}`;
+
+    const input = document.createElement("input");
+    input.id = inputId;
+    input.type = "file";
+    input.accept = "audio/*";
+
+    const status = document.createElement("small");
+    status.textContent = "Recording দেওয়া হয়নি";
+
+    input.addEventListener("change", () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const key = `${person}-${index}`;
+      if (clips[key]) URL.revokeObjectURL(clips[key]);
+
+      clips[key] = URL.createObjectURL(file);
+      status.textContent = `✓ ${file.name}`;
+    });
+
+    row.append(label, input, status);
+    $("voiceInputs").append(row);
+  });
+}
+
+function clearVoice() {
+  if (voicePlayer) {
+    voicePlayer.onended = null;
+    voicePlayer.onerror = null;
+    voicePlayer.pause();
+  }
+  voicePlayer = null;
+  voiceQueue = [];
+  captionText = "";
+  captionTime = 0;
+}
+
+function queueDialogue(person) {
+  const lines = DIALOGUES[person];
+  const index = voiceTurn[person] % lines.length;
+  voiceTurn[person]++;
+
+  // দ্রুত hit হলে অতি দীর্ঘ audio backlog জমবে না।
+  if (voiceQueue.length >= 4) voiceQueue.shift();
+
+  voiceQueue.push({
+    text: `${NAMES[person]}: ${lines[index]}`,
+    url: clips[`${person}-${index}`]
+  });
+}
+
+function updateVoice(dt) {
+  if (voicePlayer) {
+    captionText = voicePlayer.dialogueText;
+    return;
+  }
+
+  captionTime = Math.max(0, captionTime - dt);
+  if (captionTime > 0) return;
+
+  captionText = "";
+
+  if (!voiceQueue.length) return;
+
+  const item = voiceQueue.shift();
+  captionText = item.text;
+  captionTime = 2.6;
+
+  if (item.url && !muted) {
+    const player = new Audio(item.url);
+    player.dialogueText = item.text;
+    player.volume = 0.95;
+    voicePlayer = player;
+
+    const finish = () => {
+      if (voicePlayer === player) {
+        voicePlayer = null;
+        captionTime = 0.25;
+      }
+    };
+
+    player.onended = finish;
+    player.onerror = finish;
+
+    player.play().catch(finish);
+  }
+}
+
+// ================= ENGINE & EFFECTS =================
+
+function initAudio() {
+  try {
+    const AudioClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioClass) return;
+
+    if (!audio) {
+      audio = new AudioClass();
+
+      engine = audio.createOscillator();
+      engineGain = audio.createGain();
+
+      engine.type = "sawtooth";
+      engine.frequency.value = 45;
+      engineGain.gain.value = 0;
+
+      engine.connect(engineGain);
+      engineGain.connect(audio.destination);
+      engine.start();
+    }
+
+    audio.resume().catch(() => {});
+  } catch {}
+}
+
+function engineSound() {
+  if (!audio || !engineGain) return;
+
+  engineGain.gain.setTargetAtTime(
+    state === "running" && !muted ? 0.009 : 0,
+    audio.currentTime,
+    0.08
+  );
+
+  engine.frequency.setTargetAtTime(
+    42 + speed * 95,
+    audio.currentTime,
+    0.1
+  );
+}
+
+function beep(freq, length, type="triangle", volume=0.035) {
+  if (muted) return;
+  initAudio();
+  if (!audio) return;
+
+  const o = audio.createOscillator();
+  const g = audio.createGain();
+  const now = audio.currentTime;
+
+  o.type = type;
+  o.frequency.setValueAtTime(freq, now);
+  o.frequency.exponentialRampToValueAtTime(
+    Math.max(30, freq / 3), now + length
+  );
+
+  g.gain.setValueAtTime(volume, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + length);
+
+  o.connect(g);
+  g.connect(audio.destination);
+  o.onended = () => { o.disconnect(); g.disconnect(); };
+
+  o.start();
+  o.stop(now + length);
+}
+
+function horn() {
+  if (state !== "running" || hornCD > 0) return;
+  hornCD = 0.6;
+  beep(230, 0.25, "square", 0.02);
+  beep(300, 0.25, "square", 0.015);
+}
+
+// ================= STATE =================
+
+function showOverlay(title, text, button) {
+  $("overlayTitle").textContent = title;
+  $("overlayText").innerHTML = text;
+  $("play").textContent = button;
+  $("overlay").classList.remove("hidden");
+}
+
+function reset() {
+  clearVoice();
+
+  playerX = 0;
+  score = 0;
+  hitCount = 0;
+  level = 1;
+  distance = 0;
+  speed = 0;
+
+  targets = [];
+  bombs = [];
+  effects = [];
+  popups = [];
+
+  voiceTurn = {pd:0, junu:0, meraj:0};
+
+  spawnTime = 0.6;
+  bombCD = 0;
+  stickCD = 0;
+  swing = 0;
+  hornCD = 0;
+  levelBanner = 0;
+
+  keys.clear();
+  holds.clear();
+
+  state = "ready";
+  last = null;
+  updateUI();
+}
+
+function play() {
+  if (state === "over" || state === "won") reset();
+
+  initAudio();
+  state = "running";
+  last = null;
+  $("overlay").classList.add("hidden");
+
+  if (voicePlayer && !muted) {
+    voicePlayer.play().catch(() => {
+      voicePlayer = null;
+      captionTime = 1;
+    });
+  }
+
+  engineSound();
+  updateUI();
+}
+
+function pause() {
+  if (state !== "running") return;
+
+  state = "paused";
+  keys.clear();
+  holds.clear();
+
+  if (voicePlayer) voicePlayer.pause();
+
+  engineSound();
+  showOverlay("PAUSED", "আবার চালাতে Resume চাপো।", "▶ RESUME");
+  updateUI();
+}
+
+function togglePause() {
+  if (state === "running") pause();
+  else if (state === "paused") play();
+}
+
+function finish(won=false) {
+  state = won ? "won" : "over";
+  keys.clear();
+  holds.clear();
+  clearVoice();
+  engineSound();
+
+  showOverlay(
+    won ? "100 LEVELS COMPLETE!" : "GAME OVER",
+    `${won ? "সব level শেষ!" : "পুলিশের গাড়িতে ধাক্কা লেগেছে!"}
+     <br>Points: <b>${score}</b>
+     <br>Level: ${level} · Hits: ${hitCount}`,
+    "↻ PLAY AGAIN"
+  );
+
+  updateUI();
+}
+
+function updateUI() {
+  $("points").textContent = score;
+  $("level").textContent = `${level} / 100`;
+  $("hits").textContent = hitCount;
+
+  // Gameplay speed indicator; বাস্তব km/h নয়।
+  $("speed").textContent = Math.round(speed * 210);
+
+  $("caption").textContent = captionText;
+  $("pause").disabled = state !== "running";
+  $("bomb").disabled = state !== "running" || bombCD > 0;
+  $("stick").disabled = state !== "running" || stickCD > 0;
+}
+
+// ================= PERSPECTIVE =================
+
+// z=1 horizon, z=0 player.
+// x=-1 থেকে +1 road-এর lateral position।
+function project(x, z) {
+  const t = Math.max(0, Math.min(1.15, 1 - z));
+  const depth = Math.pow(t, 1.7);
+  const halfRoad = 25 + 260 * Math.pow(t, 1.2);
+
+  return {
+    x: W / 2 + x * halfRoad,
+    y: HORIZON + 470 * depth,
+    scale: 0.12 + 0.95 * depth,
+    halfRoad
+  };
+}
+
+function rect(x,y,w,h,color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x,y,w,h);
+}
+
+function ellipse(x,y,rx,ry,color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);
+  ctx.fill();
+}
+
+function text(str,x,y,size=16,color="#fff") {
+  ctx.fillStyle = color;
+  ctx.font = `bold ${size}px system-ui`;
+  ctx.textAlign = "center";
+  ctx.fillText(str,x,y);
+}
+
+function polygon(points,color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  points.forEach((p,i) => {
+    if (i===0) ctx.moveTo(p.x,p.y);
+    else ctx.lineTo(p.x,p.y);
+  });
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ================= TARGETS =================
+
+function spawnTarget() {
+  const roll = Math.random();
+  let kind;
+
+  // Police শুরু থেকেই থাকবে, প্রথম spawn ছাড়া।
+  if (distance > 0.6 && roll < Math.min(0.25,0.12+level*0.001)) {
+    kind = "police";
+  } else if (roll < 0.65) {
+    kind = "rickshaw";
+  } else {
+    kind = "faculty";
+  }
+
+  const lanes = [-0.65,0,0.65];
+  const people = ["pd","junu","meraj"];
+
+  targets.push({
+    kind,
+    person: people[Math.floor(Math.random()*3)],
+    x: lanes[Math.floor(Math.random()*3)],
+    z: 1.05,
+    hit: false,
+    age: 0,
+    rotation: 0,
+    flyX: 0,
+    flyY: 0,
+    color: ["#39a874","#cc9454","#5299c6"][Math.floor(Math.random()*3)]
+  });
+}
+
+function hitTarget(t) {
+  if (t.hit || t.kind === "police") return false;
+
+  t.hit = true;
+  t.age = 0;
+  t.flyX = (t.x < playerX ? -1 : 1) * (140+Math.random()*100);
+  t.flyY = -180;
+
+  const points = t.kind === "faculty" ? 50 : 20;
+  score += points;
+  hitCount++;
+
+  const p = project(t.x,t.z);
+  popups.push({x:p.x,y:p.y-40,label:`+${points}`,age:0});
+
+  if (t.kind === "faculty") queueDialogue(t.person);
+
+  const nextLevel = Math.min(100,Math.floor(score/100)+1);
+
+  if (nextLevel > level) {
+    level = nextLevel;
+    levelBanner = 1.7;
+    beep(650,0.2);
+  }
+
+  return true;
+}
+
+// ================= WEAPONS =================
+
+function throwBomb() {
+  if (state !== "running" || bombCD > 0) return;
+  bombs.push({x:playerX,z:0.05,age:0,dead:false});
+  bombCD = 0.6;
+  beep(480,0.12);
+}
+
+function explode(x,z) {
+  effects.push({x,z,age:0});
+  beep(100,0.3,"sawtooth",0.055);
+
+  for (const t of targets) {
+    if (!t.hit &&
+        Math.abs(t.z-z)<0.17 &&
+        Math.abs(t.x-x)<0.8) {
+      hitTarget(t);
+    }
+  }
+}
+
+function swingStick() {
+  if (state !== "running" || stickCD > 0) return;
+
+  swing = 0.28;
+  stickCD = 0.5;
+  let hit = false;
+
+  for (const t of targets) {
+    if (t.z < 0.22 && t.z > -0.05 &&
+        Math.abs(t.x-playerX)<0.75) {
+      hit = hitTarget(t) || hit;
+    }
+  }
+
+  beep(hit ? 120 : 320,0.13,"triangle");
+}
+
+// ================= UPDATE =================
+
+function update(dt) {
+  const boosting = keys.has("arrowup") || keys.has("w") || holds.has("boost");
+  const baseSpeed = 0.19 + (level-1)*0.0025;
+  const targetSpeed = baseSpeed * (boosting ? 1.6 : 1);
+
+  speed += (targetSpeed-speed)*Math.min(1,dt*5);
+  distance += speed*dt;
+
+  bombCD = Math.max(0,bombCD-dt);
+  stickCD = Math.max(0,stickCD-dt);
+  swing = Math.max(0,swing-dt);
+  hornCD = Math.max(0,hornCD-dt);
+  levelBanner = Math.max(0,levelBanner-dt);
+
+  const left = keys.has("arrowleft") || keys.has("a") || holds.has("left");
+  const right = keys.has("arrowright") || keys.has("d") || holds.has("right");
+
+  playerX += ((right?1:0)-(left?1:0))*1.45*dt;
+  playerX = Math.max(-0.82,Math.min(0.82,playerX));
+
+  spawnTime -= dt;
+
+  if (spawnTime <= 0) {
+    spawnTarget();
+    spawnTime = Math.max(0.55,1.15-level*0.005)+Math.random()*0.2;
+  }
+
+  for (const t of targets) {
+    if (t.hit) {
+      t.age += dt;
+      t.rotation += dt*7;
+    } else {
+      t.z -= speed*dt;
+    }
+  }
+
+  // Police collision আগে check হয়।
+  const policeCrash = targets.some(t =>
+    !t.hit &&
+    t.kind==="police" &&
+    t.z<0.085 && t.z>-0.08 &&
+    Math.abs(t.x-playerX)<0.36
+  );
+
+  if (policeCrash) {
+    beep(70,0.5,"sawtooth",0.065);
+    finish(false);
+    return;
+  }
+
+  for (const b of bombs) {
+    b.z += 0.85*dt;
+    b.age += dt;
+
+    const hit = targets.some(t =>
+      !t.hit &&
+      t.kind!=="police" &&
+      Math.abs(t.z-b.z)<0.055 &&
+      Math.abs(t.x-b.x)<0.24
+    );
+
+    if (hit || b.age>0.9 || b.z>0.9) {
+      explode(b.x,b.z);
+      b.dead = true;
+    }
+  }
+
+  let rammed = false;
+
+  for (const t of targets) {
+    if (!t.hit &&
+        t.kind!=="police" &&
+        t.z<0.085 && t.z>-0.08 &&
+        Math.abs(t.x-playerX)<0.34) {
+      rammed = hitTarget(t) || rammed;
+    }
+  }
+
+  if (rammed) beep(110,0.16,"sawtooth");
+
+  bombs = bombs.filter(b=>!b.dead);
+  targets = targets.filter(t=>t.hit ? t.age<1.15 : t.z>-0.13);
+
+  for (const e of effects) e.age += dt;
+  effects = effects.filter(e=>e.age<0.45);
+
+  for (const p of popups) {
+    p.age += dt;
+    p.y -= 48*dt;
+  }
+
+  popups = popups.filter(p=>p.age<1);
+
+  updateVoice(dt);
+  engineSound();
+
+  if (score>=10000) {
+    finish(true);
+    return;
+  }
+
+  updateUI();
+}
+
+// ================= BACKGROUND & ROAD =================
+
+function drawRoad() {
+  const sky = ctx.createLinearGradient(0,0,0,HORIZON+30);
+  sky.addColorStop(0,"#6997b2");
+  sky.addColorStop(1,"#d6dac0");
+
+  rect(0,0,W,HORIZON+30,sky);
+  ellipse(470,102,30,30,"#ffe7a0");
+
+  const locationIndex = Math.floor((level-1)/3)%LOCATIONS.length;
+
+  // দূরের skyline।
+  for (let i=0;i<13;i++) {
+    const x=i*48;
+    const h=28+(i*17)%44;
+    rect(x,HORIZON-h,36,h,"#617b70");
+    rect(x+5,HORIZON-h+8,7,9,"#afc1ad");
+  }
+
+  rect(0,HORIZON,W,H-HORIZON,"#70864c");
+
+  if (locationIndex===1) {
+    rect(0,HORIZON,145,H-HORIZON,"#5793a3");
+    for(let i=0;i<12;i++){
+      rect(8,HORIZON+25+i*43,85,3,"#9dc5c5");
+    }
+  }
+
+  // Perspective road bands.
+  const strips=65;
+
+  for (let i=0;i<strips;i++) {
+    const zFar=1-i/strips;
+    const zNear=1-(i+1)/strips;
+
+    const a=project(-1,zFar);
+    const b=project(1,zFar);
+    const d=project(-1,zNear);
+    const e=project(1,zNear);
+
+    const stripe=Math.floor((1-zFar+distance)*24)%2;
+    polygon([a,b,e,d],stripe?"#3c4244":"#393f41");
+
+    // Road shoulders.
+    for (const side of [-1,1]) {
+      polygon([
+        project(side*1.01,zFar),
+        project(side*1.07,zFar),
+        project(side*1.07,zNear),
+        project(side*1.01,zNear)
+      ],stripe?"#e7d8b3":"#a54c3c");
+    }
+
+    // Moving dashed lane markings.
+    if (Math.floor((1-zFar+distance)*13)%2===0) {
+      for (const lane of [-0.333,0.333]) {
+        polygon([
+          project(lane-0.009,zFar),
+          project(lane+0.009,zFar),
+          project(lane+0.009,zNear),
+          project(lane-0.009,zNear)
+        ],"#f3dd9b");
+      }
+    }
+  }
+
+  // Scenery: দূর থেকে কাছে আসে।
+  const scenery=[];
+
+  for(let i=0;i<10;i++){
+    const depth=(i/10+distance*0.55)%1;
+    scenery.push({z:1-depth,i});
+  }
+
+  scenery.sort((a,b)=>b.z-a.z);
+
+  for(const s of scenery){
+    for(const side of [-1,1]){
+      const p=project(side*1.3,s.z);
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.scale(p.scale,p.scale);
+
+      if(s.i%3===0){
+        rect(-31,-65,62,65,"#ba885c");
+        rect(-37,-70,74,13,"#8e4939");
+        rect(-20,-35,40,35,"#493f30");
+        text(side<0?"চা":"আম",0,-46,16,"#fff1b6");
+      }else{
+        rect(-5,-45,10,47,"#715033");
+        ellipse(0,-58,29,36,"#2c6640");
+        ellipse(-15,-48,20,24,"#397849");
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // Location board.
+  rect(192,113,216,36,"#173f32");
+  text(LOCATIONS[locationIndex],300,137,18,"#ffe5a2");
+}
+
+// ================= VEHICLE DRAWING =================
+
+function drawTruck() {
+  const p=project(playerX,0);
+  ctx.save();
+  ctx.translate(p.x,p.y);
+
+  ellipse(0,25,47,15,"#0005");
+
+  // Tyres.
+  rect(-40,-14,13,43,"#14191b");
+  rect(27,-14,13,43,"#14191b");
+
+  // Cabin behind cargo body.
+  rect(-31,-91,62,43,"#e0a73b");
+  rect(-25,-86,50,21,"#274f5a");
+  rect(-2,-86,4,21,"#d8c483");
+
+  // Cargo sides.
+  polygon([
+    {x:-34,y:-54},{x:-43,y:-35},
+    {x:-43,y:23},{x:-34,y:9}
+  ],"#164e44");
+
+  polygon([
+    {x:34,y:-54},{x:43,y:-35},
+    {x:43,y:23},{x:34,y:9}
+  ],"#123d35");
+
+  // Cargo top.
+  polygon([
+    {x:-34,y:-54},{x:34,y:-54},
+    {x:43,y:-35},{x:-43,y:-35}
+  ],"#67a68a");
+
+  const body=ctx.createLinearGradient(-42,0,42,0);
+  body.addColorStop(0,"#236a55");
+  body.addColorStop(.5,"#3f9172");
+  body.addColorStop(1,"#1c5848");
+  rect(-43,-35,86,58,body);
+
+  for(let y=-27;y<19;y+=12) rect(-39,y,78,3,"#164c3b");
+
+  rect(-44,23,88,7,"#bdc6bf");
+  rect(-37,13,13,7,"#e34b35");
+  rect(24,13,13,7,"#e34b35");
+  rect(-16,16,32,10,"#ebdab0");
+
+  text("RAJSHAHI",0,-5,11,"#ffdf93");
+
+  const boosting=holds.has("boost")||keys.has("w")||keys.has("arrowup");
+
+  if(boosting&&state==="running"){
+    for(let i=0;i<3;i++){
+      rect(-25+i*25,38,3,13+Math.random()*18,"#e5ce8a99");
+    }
+  }
+
+  ctx.restore();
+
+  // Textured wooden stick.
+  if(swing>0){
+    const progress=1-swing/.28;
+    const angle=-2.9+progress*3.8;
+
+    ctx.save();
+    ctx.translate(p.x,p.y-40);
+    ctx.rotate(angle);
+
+    const wood=ctx.createLinearGradient(0,-8,0,8);
+    wood.addColorStop(0,"#dcb07a");
+    wood.addColorStop(.5,"#a86c37");
+    wood.addColorStop(1,"#684023");
+
+    polygon([
+      {x:20,y:-5},{x:133,y:-9},
+      {x:141,y:-3},{x:139,y:7},{x:20,y:5}
+    ],wood);
+
+    ctx.strokeStyle="#754922";
+    ctx.lineWidth=1.4;
+
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.moveTo(48,-3+i*3);
+      ctx.lineTo(130,-5+i*4);
+      ctx.stroke();
+    }
+
+    rect(20,-6,30,12,"#41352b");
+    for(let x=23;x<48;x+=5) rect(x,-6,2,12,"#776355");
+    ellipse(17,0,10,8,"#d6a97d");
+
+    ctx.restore();
+  }
+}
+
+function drawTarget(t) {
+  const p=project(t.x,t.z);
+
+  ctx.save();
+  ctx.translate(
+    p.x+(t.hit?t.flyX*t.age:0),
+    p.y+(t.hit?t.flyY*t.age+80*t.age*t.age:0)
+  );
+
+  ctx.scale(p.scale,p.scale);
+
+  if(t.hit){
+    ctx.rotate(t.rotation);
+    ctx.globalAlpha=Math.max(0,1-t.age/1.15);
+  }
+
+  ellipse(0,9,31,10,"#0004");
+
+  if(t.kind==="rickshaw"){
+    rect(-32,-4,10,25,"#171b1c");
+    rect(22,-4,10,25,"#171b1c");
+
+    rect(-26,-47,52,61,t.color);
+
+    polygon([
+      {x:-30,y:-50},{x:30,y:-50},
+      {x:23,y:-67},{x:-23,y:-67}
+    ],"#e7d7a4");
+
+    rect(-30,-50,60,8,"#cfbd83");
+    rect(-21,-37,42,22,"#1a3f43");
+    rect(-18,-11,36,14,"#9f794b");
+
+    rect(-26,12,52,5,"#d2d5c2");
+    rect(-23,3,8,6,"#eb5a3b");
+    rect(15,3,8,6,"#eb5a3b");
+    text("⚡",0,9,15,"#ffe777");
+
+  }else if(t.kind==="police"){
+    rect(-34,-11,9,30,"#151b20");
+    rect(25,-11,9,30,"#151b20");
+    rect(-29,-52,58,67,"#e0e5e5");
+    rect(-24,-43,48,19,"#274a59");
+    rect(-29,-16,58,21,"#245484");
+    rect(-19,-58,38,9,"#27353f");
+
+    const flash=Math.floor(distance*45)%2;
+    rect(-18,-58,17,8,flash?"#f64b48":"#73302d");
+    rect(1,-58,17,8,flash?"#244d82":"#4cafff");
+
+    text("POLICE",0,-2,11,"#fff");
+    rect(-23,7,10,5,"#e43f35");
+    rect(13,7,10,5,"#e43f35");
+  }else{
+    rect(-13,-9,9,29,"#253246");
+    rect(4,-9,9,29,"#253246");
+    rect(-17,-43,34,38,
+      t.person==="pd"?"#7a75ac":t.person==="junu"?"#c1904a":"#4a8f91"
+    );
+    rect(-24,-39,8,29,"#c99b76");
+    rect(16,-39,8,29,"#c99b76");
+    ellipse(0,-56,13,15,"#d4aa86");
+    rect(-12,-70,24,7,"#26322e");
+
+    if(p.scale>.3){
+      rect(-62,-96,124,22,"#112f27");
+      text(NAMES[t.person],0,-80,13,"#ffe3a0");
+    }
+  }
+
+  ctx.restore();
+}
+
+// ================= FRAME =================
+
+function draw() {
+  ctx.clearRect(0,0,W,H);
+  drawRoad();
+
+  // Far objects আগে, near objects পরে।
+  const objects=[
+    ...targets.map(t=>({z:t.z,type:"target",obj:t})),
+    ...bombs.map(b=>({z:b.z,type:"bomb",obj:b}))
+  ].sort((a,b)=>b.z-a.z);
+
+  for(const item of objects){
+    if(item.type==="target"){
+      drawTarget(item.obj);
+    }else{
+      const p=project(item.obj.x,item.obj.z);
+      ellipse(p.x,p.y-14*p.scale,9*p.scale,11*p.scale,"#172020");
+      rect(p.x-2,p.y-30*p.scale,3,8*p.scale,"#e6b667");
+    }
+  }
+
+  drawTruck();
+
+  for(const e of effects){
+    const p=project(e.x,e.z);
+    const radius=(22+e.age*170)*p.scale;
+
+    ctx.save();
+    ctx.globalAlpha=1-e.age/.45;
+    ellipse(p.x,p.y-20*p.scale,radius,radius,"#f58f3c");
+    ellipse(p.x,p.y-20*p.scale,radius*.65,radius*.65,"#ffe5a0");
+    text("BOOM!",p.x,p.y-15*p.scale,Math.max(12,22*p.scale),"#713f24");
+    ctx.restore();
+  }
+
+  for(const p of popups){
+    ctx.save();
+    ctx.globalAlpha=1-p.age;
+    text(p.label,p.x,p.y,27,"#fff28d");
+    ctx.restore();
+  }
+
+  if(levelBanner>0){
+    rect(170,235,260,58,"#173f32e8");
+    text("LEVEL "+level,300,274,30,"#ffdc82");
+  }
+
+  // Level progress.
+  const progress=state==="won"?1:(score%100)/100;
+  rect(18,724,564,6,"#132a24");
+  rect(18,724,564*progress,6,"#e7c66b");
+}
+
+function loop(timestamp) {
+  const dt=last===null?0:Math.min((timestamp-last)/1000,.04);
+  last=timestamp;
+
+  if(state==="running") update(dt);
+  draw();
+
+  requestAnimationFrame(loop);
+}
+
+// ================= INPUT =================
+
+$("play").onclick=play;
+$("pause").onclick=pause;
+
+$("restart").onclick=()=>{
+  reset();
+  play();
+};
+
+$("bomb").onclick=throwBomb;
+$("stick").onclick=swingStick;
+
+$("mute").onclick=()=>{
+  muted=!muted;
+  $("mute").textContent=muted?"Sound OFF":"Sound ON";
+
+  if(voicePlayer){
+    if(muted){
+      voicePlayer.pause();
+      voicePlayer.onended=null;
+      voicePlayer.onerror=null;
+      voicePlayer=null;
+      captionTime=1.5;
+    }
+  }
+
+  if(!muted) initAudio();
+  engineSound();
+};
+
+for(const id of ["left","right","boost"]){
+  const button=$(id);
+
+  button.addEventListener("pointerdown",e=>{
+    e.preventDefault();
+    button.setPointerCapture(e.pointerId);
+    if(state==="running") holds.add(id);
+  });
+
+  const release=()=>holds.delete(id);
+  button.addEventListener("pointerup",release);
+  button.addEventListener("pointercancel",release);
+  button.addEventListener("lostpointercapture",release);
+}
+
+window.addEventListener("keydown",e=>{
+  if(e.target instanceof HTMLInputElement) return;
+
+  const key=e.key.toLowerCase();
+  const controlKeys=[
+    "arrowleft","arrowright","arrowup",
+    "a","d","w"," ","j","h","p"
+  ];
+
+  if(!controlKeys.includes(key)) return;
+
+  if(key===" "&&state!=="running"&&e.target instanceof HTMLButtonElement){
+    return;
+  }
+
+  e.preventDefault();
+
+  if(key==="p"){
+    if(!e.repeat) togglePause();
+  }else if(key===" "){
+    if(!e.repeat) throwBomb();
+  }else if(key==="j"){
+    if(!e.repeat) swingStick();
+  }else if(key==="h"){
+    if(!e.repeat) horn();
+  }else if(state==="running"){
+    keys.add(key);
+  }
+});
+
+window.addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));
+
+window.addEventListener("blur",()=>{
+  keys.clear();
+  holds.clear();
+  pause();
+});
+
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden) pause();
+});
+
+$("voicePanel").addEventListener("toggle",()=>{
+  if($("voicePanel").open) pause();
+});
+
+window.addEventListener("beforeunload",()=>{
+  clearVoice();
+  Object.values(clips).forEach(url=>URL.revokeObjectURL(url));
+});
+
+reset();
+requestAnimationFrame(loop);
+</script>
 </body>
 </html>
