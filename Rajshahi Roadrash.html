@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rajshahi Road Rush</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;background:#101b18;color:#fff1d5;
+  font-family:system-ui,sans-serif
+}
+main{max-width:1400px;margin:auto;padding:14px}
+header{
+  display:flex;justify-content:space-between;
+  align-items:center;margin-bottom:12px
+}
+h1{margin:0;font-size:21px;letter-spacing:1px}
+header small{
+  display:block;color:#a8bba9;font-size:10px;
+  letter-spacing:3px;margin-top:4px
+}
+header span{font-size:11px;color:#edc783}
+button{
+  font:inherit;cursor:pointer;touch-action:none;
+  user-select:none
+}
+button:focus-visible{outline:3px solid #edc783;outline-offset:3px}
+button:disabled{opacity:.4;cursor:default}
+.game{
+  position:relative;aspect-ratio:16/10;
+  border:1px solid #b79a5c77;border-radius:18px;
+  overflow:hidden;background:#a5b6ab
+}
+canvas{display:block;width:100%;height:100%}
+.hud{
+  position:absolute;left:16px;right:16px;top:16px;
+  display:flex;gap:8px;pointer-events:none
+}
+.panel{
+  padding:9px 14px;background:#12291fe8;
+  border:1px solid #ffffff26;border-radius:11px
+}
+.panel small{
+  display:block;font-size:9px;letter-spacing:2px;color:#adbfab
+}
+.panel b{display:block;font-size:24px;color:#edc783}
+.location{margin-left:auto;text-align:right}
+.location b{font-size:18px}
+.toolbar{
+  position:absolute;right:16px;top:103px;
+  display:flex;gap:6px
+}
+.toolbar button,.secondary{
+  border:1px solid #c9c7a43b;border-radius:10px;
+  padding:10px 12px;background:#173226e8;color:#f3e8c9;
+  font-size:12px
+}
+.controls{
+  position:absolute;left:16px;right:16px;bottom:17px;
+  display:flex;justify-content:space-between;
+  align-items:flex-end;gap:8px
+}
+.group{display:flex;gap:6px;align-items:flex-end}
+.control{
+  min-width:60px;min-height:60px;padding:12px;
+  border:1px solid #d6c99b66;border-radius:12px;
+  background:#173126ed;color:#f9eccc;
+  font-size:13px;font-weight:bold;box-shadow:0 4px 0 #0005
+}
+.control small{display:block;font-size:9px;opacity:.65;margin-top:5px}
+.control:active,.control.held{
+  background:#b18f52;color:#14271c;transform:translateY(2px)
+}
+#boost{background:#e0b96e;color:#192b1e}
+#bomb{background:#914a36}
+#bat{background:#705337}
+.speedometer{
+  padding:10px 17px;min-width:105px;text-align:center;
+  border-radius:12px;background:#13291fe8;
+  border:1px solid #ffffff24
+}
+.speedometer b{font-size:30px}
+.speedometer small{display:block;font-size:9px;color:#b7c4aa}
+.progress{height:4px;background:#40503d;margin-top:8px}
+.progress div{height:100%;width:0;background:#edc783}
+#caption{
+  position:absolute;left:50%;bottom:113px;
+  transform:translateX(-50%);max-width:88%;width:max-content;
+  background:#10271fec;border:1px solid #e5c18566;
+  border-radius:11px;padding:10px 17px;text-align:center;
+  pointer-events:none
+}
+#caption:empty{display:none}
+#caption small{display:block;font-size:11px;color:#b8cbb7;margin-bottom:4px}
+#caption b{font-size:17px;font-weight:500}
+#toast{
+  position:absolute;top:26%;left:50%;transform:translateX(-50%);
+  background:#143225ee;border:1px solid #d6b572;
+  color:#edc783;border-radius:10px;padding:12px 22px;
+  font-size:23px;font-weight:bold;pointer-events:none
+}
+.hidden{display:none!important}
+.overlay{
+  position:absolute;inset:0;display:grid;place-items:center;
+  padding:20px;background:linear-gradient(90deg,#071b15ef,#10291a99)
+}
+.menu{
+  width:min(530px,100%);max-height:100%;overflow:auto;
+  padding:28px;background:#11291fec;
+  border:1px solid #dac48d55;border-radius:20px
+}
+.eyebrow{font-size:10px;letter-spacing:3px;color:#c5af7e}
+.menu h2{font-size:40px;line-height:1.07;margin:13px 0}
+.menu em{color:#edc783;font-style:normal}
+.menu p{font-size:13px;line-height:1.8;color:#c0ceb8}
+.rules{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;margin:18px 0
+}
+.rules div{
+  border:1px solid #ffffff15;padding:10px;
+  border-radius:9px;font-size:12px;background:#ffffff05
+}
+.rules b{color:#edc783}
+.danger{color:#f0a18a}
+.primary{
+  width:100%;border:0;border-radius:10px;padding:14px;
+  background:#e7c27d;color:#172b1c;font-weight:800
+}
+.menu-buttons{display:flex;gap:8px;margin-top:10px}
+.menu-buttons button{flex:1}
+#settings{z-index:10}
+.setting-row{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;margin:18px 0;font-size:13px
+}
+.setting-row input{width:45%;accent-color:#dbb56f}
+.tests{display:flex;gap:7px;flex-wrap:wrap}
+#audioStatus{color:#efca84;min-height:24px}
+.file-label{
+  display:block;padding:12px;border:1px dashed #b79b67;
+  border-radius:10px;margin:14px 0;color:#edc783;
+  cursor:pointer;text-align:center;font-size:13px
+}
+footer{
+  padding:12px 0;text-align:center;
+  color:#99ae99;font-size:11px;line-height:1.8
+}
+@media(max-width:700px){
+  main{padding:7px}
+  h1{font-size:14px}
+  header span{font-size:9px}
+  .game{aspect-ratio:3/4}
+  .hud{left:8px;right:8px;top:8px;gap:4px}
+  .panel{padding:7px 9px}
+  .panel small{font-size:8px;letter-spacing:1px}
+  .panel b{font-size:19px}
+  .location b{font-size:13px}
+  .toolbar{top:79px;right:8px;gap:4px}
+  .toolbar button{font-size:10px;padding:8px}
+  .controls{left:7px;right:7px;bottom:12px;flex-wrap:wrap}
+  .group{gap:4px}
+  .control{min-width:40px;min-height:47px;padding:9px;font-size:11px}
+  .control small{display:none}
+  .speedometer{min-width:63px;padding:7px;order:3}
+  .speedometer b{font-size:21px}
+  .speedometer small{font-size:7px}
+  #caption{bottom:125px;padding:8px 12px;max-width:94%}
+  #caption b{font-size:14px}
+  .menu{padding:19px}
+  .menu h2{font-size:30px}
+  .menu p{font-size:12px}
+  .rules div{font-size:10px}
+}
+</style>
+</head>
+
+<body>
+<main>
+  <header>
+    <div>
+      <h1>RAJSHAHI ROAD RUSH</h1>
+      <small>MOVING TRAFFIC EDITION</small>
+    </div>
+    <span>100 LEVELS</span>
+  </header>
+
+  <section class="game" id="gameArea">
+    <canvas id="canvas" width="1280" height="800"></canvas>
+
+    <div class="hud">
+      <div class="panel">
+        <small>SCORE</small><b id="score">0</b>
+      </div>
+      <div class="panel">
+        <small>LEVEL</small><b id="level">1 / 100</b>
+      </div>
+      <div class="panel location">
+        <small>RAJSHAHI ROUTE</small>
+        <b id="location">সাহেব বাজার</b>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button id="pause">Ⅱ Pause</button>
+      <button id="mute">Sound ON</button>
+      <button id="settingsButton">⚙</button>
+      <button id="fullscreen">⛶</button>
+    </div>
+
+    <div id="toast" class="hidden"></div>
+    <div id="caption"></div>
+
+    <div class="controls">
+      <div class="group">
+        <button class="control" id="left">◀<small>A / ←</small></button>
+        <button class="control" id="right">▶<small>D / →</small></button>
+        <button class="control" id="brake">BRAKE<small>S / ↓</small></button>
+        <button class="control" id="boost">▲ BOOST<small>W / ↑</small></button>
+      </div>
+
+      <div class="speedometer">
+        <b id="speed">0</b>
+        <small>KM/H · ARCADE</small>
+        <div class="progress"><div id="progress"></div></div>
+      </div>
+
+      <div class="group">
+        <button class="control" id="horn">♬<small>HORN / H</small></button>
+        <button class="control" id="bat">লাঠি<small>J</small></button>
+        <button class="control" id="bomb">BOMB<small>SPACE</small></button>
+      </div>
+    </div>
+
+    <div class="overlay" id="menuScreen">
+      <div class="menu">
+        <div class="eyebrow">PADMA CITY / GOLDEN HOUR</div>
+        <h2 id="menuTitle">OWN THE ROAD.<br><em>WATCH THE WAY.</em></h2>
+        <p id="menuText">
+          চলন্ত গাড়ির মধ্যে ট্রাক চালাও।
+          পুলিশ, ম্যানহোল, কাঁটাতার ও ব্যারিকেড এড়িয়ে চলো।
+        </p>
+
+        <div class="rules" id="rules">
+          <div>রিকশা <b>+২০</b> · NPC <b>+৫০</b></div>
+          <div>প্রতি <b>১০০ points</b> নতুন level</div>
+          <div class="danger">পুলিশ / ম্যানহোল = Game Over</div>
+          <div class="danger">কাঁটাতার / ব্যারিকেড = Game Over</div>
+        </div>
+
+        <button class="primary" id="play">START ENGINE →</button>
+        <div class="menu-buttons">
+          <button class="secondary" id="voiceTest">ভয়েস পরীক্ষা</button>
+          <button class="secondary hidden" id="restart">নতুন করে শুরু</button>
+        </div>
+
+        <p style="font-size:10px">
+          কাল্পনিক NPC: ডিডি, ঝুনু ও সিরাজ · 2.5D arcade game
+        </p>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="settings">
+      <div class="menu">
+        <h2 style="font-size:27px">Sound & Controls</h2>
+
+        <p>
+          MP3-গুলো index.html-এর একই folder-এ রাখবে।
+          Sound না এলে নিচের Load voices দিয়ে সবগুলো MP3 select করো।
+        </p>
+
+        <label class="file-label" for="voiceFiles">
+          📂 LOAD VOICES — MP3 select করো
+        </label>
+        <input class="hidden" id="voiceFiles"
+               type="file" accept="audio/*" multiple>
+
+        <div class="setting-row">
+          <label for="voiceVolume">Dialogue volume</label>
+          <input id="voiceVolume" type="range"
+                 min="0" max="1" step=".05" value="1">
+        </div>
+
+        <div class="setting-row">
+          <label for="effectsVolume">Engine & effects</label>
+          <input id="effectsVolume" type="range"
+                 min="0" max="1" step=".05" value=".3">
+        </div>
+
+        <div class="tests">
+          <button class="secondary" data-person="dd">ডিডি ▶</button>
+          <button class="secondary" data-person="jhunu">ঝুনু ▶</button>
+          <button class="secondary" data-person="siraj">সিরাজ ▶</button>
+        </div>
+
+        <p id="audioStatus"></p>
+
+        <p>
+          A / D: Steering · W: Boost · S: Brake<br>
+          Space: Bomb · J: লাঠি · H: Horn · P: Pause<br>
+          পুলিশ ও বিপজ্জনক বাধা বোমা দিয়ে সরানো যাবে না।
+        </p>
+
+        <button class="primary" id="closeSettings">DONE</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    MOVING TRAFFIC · MANHOLES · BARBED WIRE · POLICE<br>
+    Dialogue-এর MP3 file-গুলোর পুরোনো নামই রাখবে।
+  </footer>
+</main>
+
+<script>
+"use strict";
+
+// ===================== SETUP =====================
+
+const $ = id => document.getElementById(id);
+const canvas = $("canvas");
+const g = canvas.getContext("2d");
+
+const keys = new Set();
+const held = new Set();
+
+const NAMES = {
+  dd: "ডিডি ফ্যাকুল্টি",
+  jhunu: "ঝুনু ফ্যাকুল্টি",
+  siraj: "সিরাজ ফ্যাকুল্টি"
+};
+
+// Display names বদলেছে, audio file names বদলায়নি।
+const DIALOGUES = {
+  dd: [
+    {text:"ইরাসমাস মুন্ডাস।", files:["irasmas mundas.mp3"]},
+    {text:"ইন্টারনেট থেকে পড়বা।", files:["internet.mp3"]},
+    {text:"এআই ইউজ করা ভালো না।", files:["Ai.mp3"]}
+  ],
+
+  jhunu: [
+    {
+      text:"আমি আনস্মার্ট নাকি?",
+      files:["unsmart.mp3", "unsmart (2).mp3"]
+    },
+    {text:"আপনি হাসেন না কেনো?", files:["hasen na.mp3"]},
+    {
+      text:"আপনারা আবার বলে দিয়েন না হেডস্যার কে।",
+      files:["headsir.mp3"]
+    }
+  ],
+
+  siraj: [
+    {
+      text:"আমাকে কি স্যার মনে হয় না।",
+      files:["sir mone hoy na.mp3"]
+    }
+  ]
+};
+
+const PLACES = [
+  "সাহেব বাজার", "পদ্মার পাড়", "তালাইমারী",
+  "রুয়েট", "কাজলা", "লক্ষ্মীপুর"
+];
+
+const DANGERS = ["police", "manhole", "wire", "barrier"];
+const LANES = [-3, 0, 3];
+const PLAYER_Z = 8.3;
+
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+let W = 1280, H = 800, horizon = 240, focal = 752;
+const cameraHeight = 3.8;
+
+let state = "ready";
+let score = 0, hits = 0, level = 1, best = 0;
+let playerX = 0, steering = 0, speed = 0;
+let travel = 0, elapsed = 0, lastTime = null;
+let spawnTimer = 1.3;
+
+let targets = [], bombs = [], explosions = [], popups = [];
+let bombCD = 0, batCD = 0, batTime = 0, hornCD = 0;
+let toastTime = 0, shake = 0;
+
+try {
+  best = Number(localStorage.getItem("rrr-best")) || 0;
+} catch {}
+
+// ===================== VOICE =====================
+
+let muted = false;
+let turns = {dd:0, jhunu:0, siraj:0};
+let voiceQueue = [];
+let currentVoice = null;
+let captionTimer = 0;
+
+const selectedFiles = new Map();
+
+function filenameKey(name) {
+  return name.trim().toLowerCase();
+}
+
+function setCaption(person, message) {
+  $("caption").replaceChildren();
+
+  if (!message) return;
+
+  const name = document.createElement("small");
+  const text = document.createElement("b");
+
+  name.textContent = person;
+  text.textContent = message;
+
+  $("caption").append(name, text);
+}
+
+function stopVoice(clear = true) {
+  if (currentVoice) {
+    currentVoice.onended = null;
+    currentVoice.onerror = null;
+    currentVoice.pause();
+  }
+
+  currentVoice = null;
+
+  if (clear) {
+    voiceQueue = [];
+    captionTimer = 0;
+    setCaption("", "");
+  }
+}
+
+function queueDialogue(person) {
+  const turn = turns[person]++;
+  const lines = DIALOGUES[person];
+  const index = turn % lines.length;
+  const item = lines[index];
+
+  const variant = Math.floor(turn / lines.length) % item.files.length;
+
+  if (voiceQueue.length >= 5) voiceQueue.shift();
+
+  voiceQueue.push({
+    person,
+    text: item.text,
+    file: item.files[variant]
+  });
+}
+
+function playDialogue(item) {
+  setCaption(NAMES[item.person], item.text);
+  captionTimer = 2.5;
+
+  const selected = selectedFiles.get(filenameKey(item.file));
+  const source = selected || new URL(item.file, document.baseURI).href;
+
+  const audio = new Audio(source);
+
+  audio.volume = Number($("voiceVolume").value);
+  audio.muted = muted;
+  currentVoice = audio;
+
+  const done = () => {
+    if (currentVoice !== audio) return;
+    currentVoice = null;
+    captionTimer = .3;
+  };
+
+  const failed = () => {
+    if (currentVoice !== audio) return;
+
+    currentVoice = null;
+    captionTimer = 2;
+
+    $("audioStatus").textContent =
+      `File পাওয়া যায়নি বা চালু হয়নি: ${item.file}। Load voices থেকে select করো।`;
+  };
+
+  audio.onended = done;
+  audio.onerror = failed;
+  audio.play().catch(failed);
+}
+
+function updateVoice(dt) {
+  if (currentVoice) return;
+
+  captionTimer = Math.max(0, captionTimer - dt);
+
+  if (captionTimer > 0) return;
+
+  if (voiceQueue.length) playDialogue(voiceQueue.shift());
+  else setCaption("", "");
+}
+
+$("voiceFiles").addEventListener("change", event => {
+  stopVoice();
+
+  for (const file of event.target.files) {
+    const key = filenameKey(file.name);
+
+    if (selectedFiles.has(key)) {
+      URL.revokeObjectURL(selectedFiles.get(key));
+    }
+
+    selectedFiles.set(key, URL.createObjectURL(file));
+  }
+
+  const required = Object.values(DIALOGUES)
+    .flat()
+    .flatMap(item => item.files);
+
+  const loaded = required.filter(
+    name => selectedFiles.has(filenameKey(name))
+  ).length;
+
+  $("audioStatus").textContent =
+    `${loaded}/${required.length} recording select হয়েছে। নিচে voice test করো।`;
+
+  event.target.value = "";
+});
+
+// ===================== ENGINE AND EFFECTS =====================
+
+let audioContext = null;
+let effectsGain = null;
+let engineGain = null;
+let engine = null;
+
+function initializeAudio() {
+  try {
+    const AudioClass = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioClass) return;
+
+    if (!audioContext) {
+      audioContext = new AudioClass();
+
+      effectsGain = audioContext.createGain();
+      effectsGain.connect(audioContext.destination);
+
+      engineGain = audioContext.createGain();
+      engineGain.gain.value = 0;
+      engineGain.connect(effectsGain);
+
+      const filter = audioContext.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = 190;
+      filter.connect(engineGain);
+
+      engine = audioContext.createOscillator();
+      engine.type = "sawtooth";
+      engine.frequency.value = 40;
+      engine.connect(filter);
+      engine.start();
+    }
+
+    audioContext.resume().catch(() => {});
+    mixAudio();
+  } catch {}
+}
+
+function mixAudio() {
+  if (currentVoice) {
+    currentVoice.volume = Number($("voiceVolume").value);
+    currentVoice.muted = muted;
+  }
+
+  if (!audioContext) return;
+
+  const now = audioContext.currentTime;
+
+  effectsGain.gain.setTargetAtTime(
+    muted ? 0 : Number($("effectsVolume").value),
+    now, .05
+  );
+
+  engineGain.gain.setTargetAtTime(
+    state === "running" ? currentVoice ? .004 : .018 : 0,
+    now, .1
+  );
+
+  engine.frequency.setTargetAtTime(34 + speed * 1.1, now, .1);
+}
+
+function sfx(type) {
+  if (!audioContext || muted) return;
+
+  const now = audioContext.currentTime;
+
+  if (type === "crash" || type === "explosion") {
+    const count = Math.floor(audioContext.sampleRate * .38);
+    const buffer = audioContext.createBuffer(1, count, audioContext.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < count; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / count);
+    }
+
+    const source = audioContext.createBufferSource();
+    const filter = audioContext.createBiquadFilter();
+    const gain = audioContext.createGain();
+
+    source.buffer = buffer;
+    filter.type = "lowpass";
+    filter.frequency.value = type === "explosion" ? 650 : 320;
+
+    gain.gain.setValueAtTime(.6, now);
+    gain.gain.exponentialRampToValueAtTime(.001, now + .38);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(effectsGain);
+
+    source.onended = () => {
+      source.disconnect();
+      filter.disconnect();
+      gain.disconnect();
+    };
+
+    source.start();
+    return;
+  }
+
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+
+  oscillator.type = type === "horn" ? "square" : "triangle";
+
+  const frequency =
+    type === "horn" ? 180 :
+    type === "level" ? 660 :
+    type === "throw" ? 400 : 120;
+
+  oscillator.frequency.setValueAtTime(frequency, now);
+  oscillator.frequency.exponentialRampToValueAtTime(
+    type === "level" ? 1000 : 45, now + .22
+  );
+
+  gain.gain.setValueAtTime(type === "horn" ? .1 : .2, now);
+  gain.gain.exponentialRampToValueAtTime(.001, now + .24);
+
+  oscillator.connect(gain);
+  gain.connect(effectsGain);
+
+  oscillator.onended = () => {
+    oscillator.disconnect();
+    gain.disconnect();
+  };
+
+  oscillator.start();
+  oscillator.stop(now + .25);
+}
+
+// ===================== DRAW HELPERS =====================
+
+function resize() {
+  W = 1280;
+  H = window.innerWidth < 700 ? 1430 : 800;
+
+  horizon = H * .30;
+  focal = H * .94;
+
+  canvas.width = W;
+  canvas.height = H;
+}
+
+function project(x, y, z) {
+  z = Math.max(.7, z);
+
+  return {
+    x: W / 2 + focal * x / z,
+    y: horizon + focal * (cameraHeight - y) / z,
+    scale: focal / z
+  };
+}
+
+function rect(x, y, w, h, color) {
+  g.fillStyle = color;
+  g.fillRect(x, y, w, h);
+}
+
+function ellipse(x, y, rx, ry, color) {
+  g.fillStyle = color;
+  g.beginPath();
+  g.ellipse(x, y, Math.max(.001, rx), Math.max(.001, ry), 0, 0, Math.PI * 2);
+  g.fill();
+}
+
+function poly(points, color) {
+  g.fillStyle = color;
+  g.beginPath();
+
+  points.forEach((p, i) => {
+    if (i === 0) g.moveTo(p.x, p.y);
+    else g.lineTo(p.x, p.y);
+  });
+
+  g.closePath();
+  g.fill();
+}
+
+function line(x1, y1, x2, y2, color, width = 1) {
+  g.strokeStyle = color;
+  g.lineWidth = width;
+  g.beginPath();
+  g.moveTo(x1, y1);
+  g.lineTo(x2, y2);
+  g.stroke();
+}
+
+function text(value, x, y, size = 15, color = "#fff") {
+  g.fillStyle = color;
+  g.font = `700 ${size}px system-ui`;
+  g.textAlign = "center";
+  g.fillText(value, x, y);
+}
+
+function ground(x1, z1, x2, z2, color) {
+  poly([
+    project(x1, 0, z1),
+    project(x2, 0, z1),
+    project(x2, 0, z2),
+    project(x1, 0, z2)
+  ], color);
+}
+
+function building(x, z, w, h, depth) {
+  const a = project(x - w / 2, 0, z - depth / 2);
+  const b = project(x + w / 2, 0, z - depth / 2);
+  const at = project(x - w / 2, h, z - depth / 2);
+  const bt = project(x + w / 2, h, z - depth / 2);
+  const af = project(x - w / 2, h, z + depth / 2);
+  const bf = project(x + w / 2, h, z + depth / 2);
+  const fl = project(x - w / 2, 0, z + depth / 2);
+  const fr = project(x + w / 2, 0, z + depth / 2);
+
+  poly([at, bt, bf, af], "#c5b69b");
+
+  if (x < 0) poly([b, fr, bf, bt], "#7e806d");
+  else poly([a, fl, af, at], "#7e806d");
+
+  poly([a, b, bt, at], "#a58f77");
+
+  const s = focal / (z - depth / 2);
+
+  for (let i = 0; i < 3; i++) {
+    const p = project(x - 1.45 + i * 1.45, 2.5, z - depth / 2 - .01);
+    rect(p.x - .4 * s, p.y, .8 * s, 1.2 * s, "#42574d");
+  }
+
+  const board = project(x, h - .7, z - depth / 2 - .02);
+
+  rect(board.x - 2.15 * s, board.y, 4.3 * s, .65 * s, "#254b3b");
+  text(x < 0 ? "চা • সিঙ্গাড়া" : "রাজশাহীর আম",
+       board.x, board.y + .45 * s,
+       Math.max(5, .36 * s), "#e5d1a3");
+}
+
+// ===================== STATE AND MENUS =====================
+
+function updateUI() {
+  $("score").textContent = score;
+  $("level").textContent = `${level} / 100`;
+  $("speed").textContent = Math.round(speed * 3.6);
+
+  $("progress").style.width = `${state === "won" ? 100 : score % 100}%`;
+
+  $("location").textContent =
+    PLACES[Math.floor((level - 1) / 3) % PLACES.length];
+
+  $("pause").disabled = state !== "running";
+  $("bomb").disabled = state !== "running" || bombCD > 0;
+  $("bat").disabled = state !== "running" || batCD > 0;
+}
+
+function clearControls() {
+  keys.clear();
+  held.clear();
+
+  document.querySelectorAll(".held").forEach(
+    button => button.classList.remove("held")
+  );
+}
+
+function createTarget(kind, x, z, person = "dd") {
+  const moving = kind === "rickshaw" || kind === "police";
+
+  return {
+    kind, person, x, baseX:x, z,
+    hit:false, age:0, side:0, rotation:0,
+
+    // নিজস্ব forward speed; static obstacles-এর জন্য 0।
+    cruise: moving ? (kind === "police" ? 9 : 5) + Math.random() * 5 : 0,
+
+    phase:Math.random() * Math.PI * 2,
+    wheelPhase:Math.random() * 5,
+
+    color:["#458b73", "#ae8555", "#527c9e"][Math.floor(Math.random() * 3)]
+  };
+}
+
+function resetGame() {
+  stopVoice();
+
+  score = 0;
+  hits = 0;
+  level = 1;
+  playerX = 0;
+  steering = 0;
+  speed = 0;
+  travel = 0;
+  elapsed = 0;
+  spawnTimer = 1.3;
+
+  targets = [
+    createTarget("rickshaw", -3, 43),
+    createTarget("rickshaw", 3, 66),
+    createTarget("npc", 0, 85, "dd")
+  ];
+
+  bombs = [];
+  explosions = [];
+  popups = [];
+
+  bombCD = 0;
+  batCD = 0;
+  batTime = 0;
+  hornCD = 0;
+  toastTime = 0;
+  shake = 0;
+
+  turns = {dd:0, jhunu:0, siraj:0};
+
+  clearControls();
+  state = "ready";
+  lastTime = null;
+
+  $("toast").classList.add("hidden");
+  $("rules").classList.remove("hidden");
+  $("restart").classList.add("hidden");
+
+  mixAudio();
+  updateUI();
+}
+
+function startGame() {
+  if (state === "over" || state === "won") resetGame();
+
+  initializeAudio();
+
+  state = "running";
+  lastTime = null;
+
+  $("menuScreen").classList.add("hidden");
+  $("settings").classList.add("hidden");
+
+  if (currentVoice && currentVoice.paused) {
+    const audio = currentVoice;
+
+    audio.play().catch(() => {
+      if (currentVoice === audio) {
+        currentVoice = null;
+        captionTimer = 1;
+      }
+    });
+  }
+
+  sfx("level");
+  mixAudio();
+  updateUI();
+}
+
+function pauseGame() {
+  if (state !== "running") return;
+
+  state = "paused";
+  clearControls();
+
+  if (currentVoice) currentVoice.pause();
+
+  $("menuTitle").innerHTML = "TAKE A<br><em>BREATHER.</em>";
+  $("menuText").textContent = "Resume চাপলে এখান থেকেই আবার চলবে।";
+  $("play").textContent = "RESUME →";
+
+  $("rules").classList.add("hidden");
+  $("restart").classList.remove("hidden");
+  $("menuScreen").classList.remove("hidden");
+
+  mixAudio();
+  updateUI();
+}
+
+function finishGame(reason, won = false) {
+  state = won ? "won" : "over";
+
+  clearControls();
+  stopVoice();
+
+  best = Math.max(best, score);
+
+  try {
+    localStorage.setItem("rrr-best", String(best));
+  } catch {}
+
+  $("menuTitle").innerHTML = won
+    ? "ALL 100.<br><em>ROAD MASTER.</em>"
+    : "END OF<br><em>THE ROAD.</em>";
+
+  $("menuText").textContent =
+    `${reason} · Points: ${score} · Level: ${level} · Hits: ${hits} · Best: ${best}`;
+
+  $("play").textContent = "PLAY AGAIN →";
+  $("rules").classList.add("hidden");
+  $("restart").classList.add("hidden");
+  $("menuScreen").classList.remove("hidden");
+
+  mixAudio();
+  updateUI();
+}
+
+function showToast(message) {
+  $("toast").textContent = message;
+  $("toast").classList.remove("hidden");
+  toastTime = 2.2;
+}
+
+// ===================== TARGETS AND WEAPONS =====================
+
+function spawnTarget() {
+  const random = Math.random();
+  const lane = LANES[Math.floor(Math.random() * LANES.length)];
+  const dangerous = elapsed > 7 && random < .35;
+
+  const kind = dangerous
+    ? DANGERS[Math.floor(Math.random() * DANGERS.length)]
+    : random < .72 ? "rickshaw" : "npc";
+
+  const people = ["dd", "jhunu", "siraj"];
+  const person = people[Math.floor(Math.random() * people.length)];
+
+  targets.push(createTarget(kind, lane, 175, person));
+}
+
+function hitTarget(target) {
+  if (target.hit || DANGERS.includes(target.kind)) return false;
+
+  target.hit = true;
+  target.age = 0;
+  target.side = target.x < playerX ? -1 : 1;
+
+  const earned = target.kind === "npc" ? 50 : 20;
+
+  score += earned;
+  hits++;
+
+  const p = project(target.x, 1, target.z);
+
+  popups.push({x:p.x, y:p.y, text:`+${earned}`, age:0});
+
+  if (target.kind === "npc") queueDialogue(target.person);
+
+  const nextLevel = Math.min(100, Math.floor(score / 100) + 1);
+
+  if (nextLevel > level) {
+    level = nextLevel;
+    sfx("level");
+    showToast(`LEVEL ${level}`);
+  }
+
+  return true;
+}
+
+function throwBomb() {
+  if (state !== "running" || bombCD > 0) return;
+
+  bombs.push({x:playerX, z:PLAYER_Z + 2, age:0, dead:false});
+  bombCD = .7;
+
+  sfx("throw");
+}
+
+function explode(bomb) {
+  explosions.push({x:bomb.x, z:bomb.z, age:0});
+  sfx("explosion");
+  shake = .1;
+
+  for (const target of targets) {
+    if (
+      !target.hit &&
+      Math.abs(target.z - bomb.z) < 9 &&
+      Math.abs(target.x - bomb.x) < 3.5
+    ) {
+      hitTarget(target);
+    }
+  }
+}
+
+function swingBat() {
+  if (state !== "running" || batCD > 0) return;
+
+  batTime = .32;
+  batCD = .52;
+
+  let hit = false;
+
+  for (const target of targets) {
+    if (
+      target.z > 6 && target.z < 19 &&
+      Math.abs(target.x - playerX) < 3.4
+    ) {
+      hit = hitTarget(target) || hit;
+    }
+  }
+
+  sfx(hit ? "hit" : "throw");
+}
+
+function horn() {
+  if (state !== "running" || hornCD > 0) return;
+
+  hornCD = .7;
+  sfx("horn");
+}
+
+// ===================== UPDATE =====================
+
+function update(dt) {
+  elapsed += dt;
+
+  const boosting =
+    held.has("boost") || keys.has("w") || keys.has("arrowup");
+
+  const braking =
+    held.has("brake") || keys.has("s") || keys.has("arrowdown");
+
+  const baseSpeed = 19 + (level - 1) * .27;
+
+  const desiredSpeed = braking
+    ? baseSpeed * .35
+    : boosting ? baseSpeed * 1.42 : baseSpeed;
+
+  speed += (desiredSpeed - speed) * Math.min(1, dt * (braking ? 6 : 2));
+  travel += speed * dt;
+
+  const right =
+    held.has("right") || keys.has("d") || keys.has("arrowright");
+
+  const left =
+    held.has("left") || keys.has("a") || keys.has("arrowleft");
+
+  const direction = (right ? 1 : 0) - (left ? 1 : 0);
+
+  steering += (direction - steering) * Math.min(1, dt * 9);
+  playerX = clamp(playerX + direction * 5.7 * dt, -4.15, 4.15);
+
+  spawnTimer -= dt;
+
+  if (spawnTimer <= 0) {
+    spawnTarget();
+    spawnTimer = Math.max(1.05, 2.4 - level * .012) + Math.random() * .35;
+  }
+
+  bombCD = Math.max(0, bombCD - dt);
+  batCD = Math.max(0, batCD - dt);
+  batTime = Math.max(0, batTime - dt);
+  hornCD = Math.max(0, hornCD - dt);
+  shake = Math.max(0, shake - dt);
+  toastTime = Math.max(0, toastTime - dt);
+
+  if (!toastTime) $("toast").classList.add("hidden");
+
+  for (const target of targets) {
+    const previousZ = target.z;
+
+    if (target.hit) {
+      target.age += dt;
+      target.rotation += dt * 8;
+    } else {
+      // Relative movement: গাড়ির নিজের গতি minus player speed।
+      target.z += (target.cruise - speed) * dt;
+      target.wheelPhase += target.cruise * dt * 3;
+
+      if (target.cruise > 0) {
+        target.phase += dt * 1.7;
+        target.x = target.baseX + Math.sin(target.phase) * .12;
+      }
+    }
+
+    const collision =
+      !target.hit &&
+      DANGERS.includes(target.kind) &&
+      previousZ >= PLAYER_Z - 1 &&
+      target.z <= PLAYER_Z + 2.6 &&
+      Math.abs(target.x - playerX) <
+        (target.kind === "manhole" ? 1.4 : 1.7);
+
+    if (collision) {
+      const reasons = {
+        police:"পুলিশের গাড়িতে ধাক্কা!",
+        manhole:"খোলা ম্যানহোলে পড়েছ!",
+        wire:"কাঁটাতারে আটকে গেছ!",
+        barrier:"ব্যারিকেডে ধাক্কা!"
+      };
+
+      sfx("crash");
+      finishGame(reasons[target.kind]);
+      return;
+    }
+  }
+
+  for (const bomb of bombs) {
+    bomb.age += dt;
+    bomb.z += 65 * dt;
+
+    const collision = targets.some(target =>
+      !target.hit &&
+      !DANGERS.includes(target.kind) &&
+      Math.abs(target.x - bomb.x) < 1.8 &&
+      Math.abs(target.z - bomb.z) < 3
+    );
+
+    if (collision || bomb.age > 1.2) {
+      explode(bomb);
+      bomb.dead = true;
+    }
+  }
+
+  let rammed = false;
+
+  for (const target of targets) {
+    if (
+      !target.hit &&
+      !DANGERS.includes(target.kind) &&
+      target.z < PLAYER_Z + 2.8 &&
+      target.z > PLAYER_Z - 2 &&
+      Math.abs(target.x - playerX) < 1.6
+    ) {
+      rammed = hitTarget(target) || rammed;
+    }
+  }
+
+  if (rammed) {
+    sfx("hit");
+    shake = .08;
+  }
+
+  targets = targets.filter(target =>
+    target.hit ? target.age < 1.1 : target.z > 3 && target.z < 260
+  );
+
+  bombs = bombs.filter(bomb => !bomb.dead);
+
+  for (const explosion of explosions) explosion.age += dt;
+  explosions = explosions.filter(explosion => explosion.age < .5);
+
+  for (const popup of popups) {
+    popup.age += dt;
+    popup.y -= 35 * dt;
+  }
+
+  popups = popups.filter(popup => popup.age < 1);
+
+  updateVoice(dt);
+  mixAudio();
+
+  if (score >= 10000) {
+    finishGame("১০০টি level শেষ!", true);
+    return;
+  }
+
+  updateUI();
+}
+
+// ===================== ENVIRONMENT =====================
+
+function drawWorld() {
+  const sky = g.createLinearGradient(0, 0, 0, horizon + 120);
+
+  sky.addColorStop(0, "#819d9e");
+  sky.addColorStop(.65, "#d5c7a7");
+  sky.addColorStop(1, "#e8c391");
+
+  rect(0, 0, W, H, sky);
+  ellipse(W * .78, horizon * .48, 29, 29, "#ffe4ac");
+
+  for (let i = 0; i < 23; i++) {
+    const x = i * 61 - 30;
+    const h = 22 + (i * 37) % 76;
+
+    rect(x, horizon - h, 43 + (i % 3) * 9, h, "#7c8b80");
+
+    for (let a = 0; a < 3; a++) {
+      for (let b = 0; b < 3; b++) {
+        rect(x + 6 + a * 11, horizon - h + 9 + b * 15, 5, 7, "#b6b9a2");
+      }
+    }
+  }
+
+  rect(0, horizon, W, H - horizon, "#8c946b");
+
+  ground(-5.3, 3.6, 5.3, 450, "#444746");
+  ground(-5.3, 3.6, -5.02, 450, "#ddd3b6");
+  ground(5.02, 3.6, 5.3, 450, "#ddd3b6");
+
+  const offset = travel % 12;
+
+  for (let z = 4 - offset; z < 300; z += 12) {
+    const near = Math.max(4, z);
+    const far = z + 6;
+
+    if (far <= 4) continue;
+
+    for (const x of [-1.67, 1.67]) {
+      ground(x - .025, near, x + .025, far, "#e1d7b9");
+    }
+  }
+
+  for (let i = 0; i < 170; i++) {
+    const z = 5 + (i * 7.131 - travel % 180 + 180) % 180;
+    const x = Math.sin(i * 12.12) * 4.9;
+    const p = project(x, 0, z);
+
+    rect(p.x, p.y, Math.max(1, p.scale * .015), 1,
+         i % 2 ? "#93938a35" : "#121e1c30");
+  }
+
+  ground(-7.5, 4, -5.5, 350, "#b4a68b");
+  ground(5.5, 4, 7.5, 350, "#b4a68b");
+
+  for (let z = 5 - travel % 8; z < 190; z += 8) {
+    if (z < 4) continue;
+
+    for (const side of [-1, 1]) {
+      const a = project(side * 5.5, 0, z);
+      const b = project(side * 7.5, 0, z);
+
+      line(a.x, a.y, b.x, b.y, "#847e6e", Math.max(.5, a.scale * .012));
+    }
+  }
+
+  const scenery = [];
+
+  for (let i = 0; i < 19; i++) {
+    scenery.push({i, z:10 + (i * 14 - travel % 266 + 266) % 266});
+  }
+
+  scenery.sort((a, b) => b.z - a.z);
+
+  for (const item of scenery) {
+    const {i, z} = item;
+
+    for (const side of [-1, 1]) {
+      const x = side * (i % 3 === 0 ? 10 : 8.2);
+      const p = project(x, 0, z);
+      const s = p.scale;
+
+      if (i % 3 === 0) {
+        building(x, z, 4.8, 3.8 + i % 4, 3);
+      } else {
+        const top = project(x, 3.4, z);
+
+        rect(p.x - .11 * s, top.y, .22 * s, p.y - top.y, "#655a43");
+        ellipse(top.x, top.y - 1.4 * s, 1.1 * s, 1.6 * s, "#475f43");
+        ellipse(top.x - .6 * s, top.y - .7 * s, .8 * s, 1.1 * s, "#59744c");
+        ellipse(top.x + .6 * s, top.y - .9 * s, .8 * s, 1.2 * s, "#4d6945");
+      }
+    }
+
+    if (i % 2 === 0) {
+      const base = project(6.2, 0, z);
+      const top = project(6.2, 6, z);
+      const end = project(4.7, 6, z);
+
+      line(base.x, base.y, top.x, top.y, "#606964",
+           Math.max(1, base.scale * .045));
+
+      line(top.x, top.y, end.x, end.y, "#606964",
+           Math.max(1, base.scale * .04));
+
+      rect(end.x - .35 * base.scale, end.y,
+           .7 * base.scale, .1 * base.scale, "#e4d1a0");
+    }
+  }
+
+  const haze = g.createLinearGradient(0, horizon - 10, 0, horizon + 105);
+  haze.addColorStop(0, "#d2c7ae99");
+  haze.addColorStop(1, "#d2c7ae00");
+
+  rect(0, horizon - 10, W, 115, haze);
+}
+
+// ===================== TARGET DRAWING =====================
+
+function dangerBadge(target) {
+  if (target.z > 90) return;
+
+  const p = project(target.x, target.kind === "manhole" ? .7 : 2.2, target.z);
+  const size = clamp(p.scale * .4, 10, 25);
+
+  poly([
+    {x:p.x, y:p.y - size},
+    {x:p.x - size * .85, y:p.y + size * .6},
+    {x:p.x + size * .85, y:p.y + size * .6}
+  ], "#a54f37");
+
+  text("!", p.x, p.y + size * .38, size, "#ffe8c8");
+}
+
+function drawTarget(t) {
+  const p = project(t.x, 0, t.z);
+
+  g.save();
+
+  if (t.hit) {
+    g.translate(p.x + t.side * t.age * 210, p.y - 160 * t.age);
+    g.rotate(t.rotation);
+    g.scale(1 - t.age * .4, 1 - t.age * .4);
+    g.globalAlpha = 1 - t.age / 1.1;
+  } else {
+    const suspension = t.cruise > 0
+      ? Math.sin(t.wheelPhase * .7) * .012 * p.scale
+      : 0;
+
+    g.translate(p.x, p.y + suspension);
+
+    if (t.cruise > 0) g.rotate(Math.sin(t.phase) * .009);
+  }
+
+  g.scale(p.scale, p.scale);
+
+  if (t.kind === "rickshaw") {
+    ellipse(0, .03, 1.05, .21, "#14231b66");
+    rect(-1, -.4, .24, .55, "#1f2825");
+    rect(.76, -.4, .24, .55, "#1f2825");
+    rect(-.84, -1.7, 1.68, 1.62, t.color);
+
+    poly([
+      {x:-.95,y:-1.75},{x:.95,y:-1.75},
+      {x:.7,y:-2.15},{x:-.7,y:-2.15}
+    ], "#c5b590");
+
+    rect(-.95, -1.76, 1.9, .16, "#ded0aa");
+    rect(-.66, -1.42, 1.32, .71, "#233e39");
+    rect(-.62, -.61, 1.24, .35, "#a28257");
+    rect(-.85, -.08, 1.7, .12, "#bdc2a7");
+    rect(-.72, -.26, .2, .13, "#c14f36");
+    rect(.52, -.26, .2, .13, "#c14f36");
+
+    text("⚡", 0, -.18, .35, "#f9d47e");
+  }
+
+  else if (t.kind === "npc") {
+    ellipse(0, .03, .45, .12, "#14231b66");
+    rect(-.24, -.7, .18, .65, "#374039");
+    rect(.06, -.7, .18, .65, "#374039");
+
+    const shirt = t.person === "dd"
+      ? "#796f81"
+      : t.person === "jhunu" ? "#b39c78" : "#77918c";
+
+    rect(-.3, -1.42, .6, .77, shirt);
+    rect(-.43, -1.36, .13, .68, "#b59676");
+    rect(.3, -1.36, .13, .68, "#b59676");
+    ellipse(0, -1.66, .22, .27, "#c5a486");
+    ellipse(0, -1.86, .22, .12, "#41453b");
+    rect(-.19, -1.72, .14, .06, "#4b5145");
+    rect(.05, -1.72, .14, .06, "#4b5145");
+  }
+
+  else if (t.kind === "police") {
+    ellipse(0, 0, 1.2, .22, "#14231b66");
+    rect(-1.1, -.44, .25, .55, "#19221f");
+    rect(.85, -.44, .25, .55, "#19221f");
+    rect(-.95, -1.22, 1.9, 1.2, "#d4d7c8");
+
+    poly([
+      {x:-.95,y:-1.2},{x:-.65,y:-1.9},
+      {x:.65,y:-1.9},{x:.95,y:-1.2}
+    ], "#a8b6ae");
+
+    rect(-.6, -1.74, 1.2, .43, "#314f55");
+    rect(-.95, -.72, 1.9, .4, "#47647a");
+
+    const flash = Math.floor(elapsed * 7) % 2;
+
+    rect(-.55, -2, .48, .15, flash ? "#e35a4a" : "#7b3831");
+    rect(.07, -2, .48, .15, flash ? "#3d596a" : "#7ebed5");
+    text("POLICE", 0, -.42, .26, "#e8e9da");
+
+    rect(-.78, -.2, .32, .13, "#c7523d");
+    rect(.46, -.2, .32, .13, "#c7523d");
+  }
+
+  else if (t.kind === "manhole") {
+    ellipse(0, 0, 1, .4, "#a29a80");
+    ellipse(0, -.015, .88, .34, "#222b27");
+    ellipse(0, .045, .68, .22, "#0b1412");
+
+    ellipse(1.23, .08, .75, .28, "#6a7061");
+
+    for (let i = -2; i < 3; i++) {
+      line(.7, .08 + i * .065, 1.8, .08 + i * .065, "#454e44", .025);
+    }
+  }
+
+  else if (t.kind === "wire") {
+    rect(-1.05, -1.1, .09, 1.2, "#786b52");
+    rect(.96, -1.1, .09, 1.2, "#786b52");
+
+    for (let i = 0; i < 7; i++) {
+      const x = -.9 + i * .3;
+
+      g.strokeStyle = "#b0b7a0";
+      g.lineWidth = .028;
+      g.beginPath();
+      g.ellipse(x, -.45, .28, .49, -.22, 0, Math.PI * 2);
+      g.stroke();
+
+      for (let j = 0; j < 3; j++) {
+        const y = -.8 + j * .31;
+
+        line(x - .09, y - .09, x + .09, y + .09, "#d3d1b4", .025);
+        line(x + .09, y - .09, x - .09, y + .09, "#d3d1b4", .025);
+      }
+    }
+
+    line(-1, -.4, 1, -.4, "#9aab97", .025);
+  }
+
+  else if (t.kind === "barrier") {
+    rect(-1, -.8, .18, .9, "#79664c");
+    rect(.82, -.8, .18, .9, "#79664c");
+    rect(-1.15, -1.25, 2.3, .7, "#d1ba89");
+
+    for (let i = 0; i < 5; i++) {
+      const x = -1.15 + i * .4;
+
+      poly([
+        {x,y:-.55},{x:x+.22,y:-.55},
+        {x:x+.62,y:-1.25},{x:x+.4,y:-1.25}
+      ], "#8b5942");
+    }
+
+    rect(-.18, -1.45, .36, .2, "#c99746");
+  }
+
+  // চলন্ত গাড়ির tyre-tread animation.
+  if (t.cruise > 0 && !t.hit) {
+    const phase = (t.wheelPhase % 1) * .17;
+
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < 3; i++) {
+        const y = -.38 + i * .17 + phase;
+
+        if (y < .1) {
+          line(side * .98 - .065, y,
+               side * .98 + .065, y, "#666e5e", .035);
+        }
+      }
+    }
+  }
+
+  g.restore();
+
+  if (t.kind === "npc" && !t.hit && t.z < 65) {
+    const p = project(t.x, 2.35, t.z);
+    const size = clamp(p.scale * .24, 10, 20);
+
+    g.font = `600 ${size}px system-ui`;
+    const width = g.measureText(NAMES[t.person]).width + 18;
+
+    rect(p.x - width / 2, p.y - size, width, size + 9, "#173027dd");
+    text(NAMES[t.person], p.x, p.y, size, "#e9d5af");
+  }
+
+  if (DANGERS.includes(t.kind)) dangerBadge(t);
+}
+
+// ===================== TRUCK =====================
+
+function drawTruck() {
+  const p = project(playerX, 0, PLAYER_Z);
+  const s = p.scale;
+
+  g.save();
+  g.translate(p.x, p.y);
+  g.rotate(-steering * .017);
+  g.scale(s, s);
+
+  ellipse(.18, .12, 1.3, .26, "#17251e66");
+
+  rect(-1.06, -.57, .28, .64, "#19231f");
+  rect(.78, -.57, .28, .64, "#19231f");
+
+  const cabin = g.createLinearGradient(-1, 0, 1, 0);
+  cabin.addColorStop(0, "#ad854d");
+  cabin.addColorStop(.5, "#d5ac66");
+  cabin.addColorStop(1, "#9a7441");
+
+  rect(-.85, -2.28, 1.7, .86, cabin);
+
+  poly([
+    {x:-.85,y:-2.28},{x:-.65,y:-2.55},
+    {x:.65,y:-2.55},{x:.85,y:-2.28}
+  ], "#d9ba80");
+
+  rect(-.65, -2.2, 1.3, .43, "#435c59");
+  rect(-.03, -2.2, .06, .43, "#c1ac7c");
+
+  rect(-1.12, -1.98, .2, .22, "#788477");
+  rect(.92, -1.98, .2, .22, "#788477");
+
+  line(-1, -1.8, -.78, -1.7, "#6b766a", .04);
+  line(1, -1.8, .78, -1.7, "#6b766a", .04);
+
+  poly([
+    {x:-.92,y:-1.7},{x:.92,y:-1.7},
+    {x:1.02,y:-1.38},{x:-1.02,y:-1.38}
+  ], "#7c8d68");
+
+  const cargo = g.createLinearGradient(-1, 0, 1, 0);
+  cargo.addColorStop(0, "#42644e");
+  cargo.addColorStop(.45, "#70846a");
+  cargo.addColorStop(1, "#3c5e49");
+
+  rect(-1.02, -1.38, 2.04, 1.34, cargo);
+
+  for (let i = 0; i < 6; i++) {
+    rect(-.94, -1.28 + i * .2, 1.88, .035, "#253e2f88");
+    rect(-.94, -1.24 + i * .2, 1.88, .015, "#a3ac8199");
+  }
+
+  for (const side of [-1, 1]) {
+    rect(side * .87, -1.35, .04, 1.3, "#bbb88d");
+
+    for (let i = 0; i < 5; i++) {
+      ellipse(side * .87, -1.2 + i * .22, .025, .025, "#d7cfab");
+    }
+  }
+
+  text("RAJSHAHI", 0, -.86, .23, "#e0d1a0");
+  text("পদ্মা এক্সপ্রেস", 0, -.53, .21, "#e7d9ae");
+
+  rect(-1.05, -.03, 2.1, .13, "#a9ada0");
+
+  const braking =
+    held.has("brake") || keys.has("s") || keys.has("arrowdown");
+
+  const brakeColor = braking ? "#f16e44" : "#9c3f2c";
+
+  rect(-.9, -.2, .25, .12, brakeColor);
+  rect(.65, -.2, .25, .12, brakeColor);
+
+  rect(-.29, -.16, .58, .18, "#d3c79d");
+  text("রাজ • ১১", 0, -.025, .1, "#314136");
+
+  g.restore();
+
+  if (batTime > 0) {
+    const progress = 1 - batTime / .32;
+
+    g.save();
+    g.translate(p.x, p.y - 1.15 * s);
+    g.rotate(-2.9 + progress * 4);
+    g.scale(s, s);
+
+    const wood = g.createLinearGradient(0, -.08, 0, .08);
+    wood.addColorStop(0, "#e0bc80");
+    wood.addColorStop(.5, "#b18b51");
+    wood.addColorStop(1, "#735633");
+
+    poly([
+      {x:.2,y:-.05},{x:2.4,y:-.09},{x:2.53,y:0},
+      {x:2.4,y:.1},{x:.2,y:.05}
+    ], wood);
+
+    for (let i = 0; i < 3; i++) {
+      line(.8, -.045 + i * .035,
+           2.35, -.06 + i * .06, "#896331", .014);
+    }
+
+    rect(.15, -.07, .6, .14, "#393e31");
+
+    for (let i = 0; i < 5; i++) {
+      rect(.2 + i * .1, -.07, .025, .14, "#7c8164");
+    }
+
+    ellipse(.12, 0, .17, .1, "#c4a07b");
+    g.restore();
+  }
+}
+
+// ===================== DRAW FRAME =====================
+
+function draw() {
+  g.save();
+
+  if (shake > 0 && state === "running") {
+    g.translate(
+      Math.sin(elapsed * 90) * shake * 15,
+      Math.cos(elapsed * 80) * shake * 10
+    );
+  }
+
+  drawWorld();
+
+  targets.slice().sort((a, b) => b.z - a.z).forEach(drawTarget);
+
+  for (const bomb of bombs) {
+    const p = project(bomb.x, 1.5 + Math.sin(bomb.age * 2) * 1.5, bomb.z);
+
+    ellipse(p.x, p.y, p.scale * .15, p.scale * .18, "#26372d");
+
+    line(p.x, p.y - p.scale * .15,
+         p.x + p.scale * .06, p.y - p.scale * .28, "#ddac5b", 2);
+  }
+
+  drawTruck();
+
+  for (const explosion of explosions) {
+    const p = project(explosion.x, .8, explosion.z);
+
+    g.save();
+    g.globalAlpha = 1 - explosion.age / .5;
+
+    ellipse(p.x, p.y,
+      p.scale * (.5 + explosion.age * 6),
+      p.scale * (.6 + explosion.age * 5), "#ce944b");
+
+    ellipse(p.x, p.y,
+      p.scale * (.2 + explosion.age * 4),
+      p.scale * (.3 + explosion.age * 3), "#e9cf8c");
+
+    g.restore();
+  }
+
+  for (const popup of popups) {
+    g.save();
+    g.globalAlpha = 1 - popup.age;
+    text(popup.text, popup.x, popup.y, 30, "#f3d58b");
+    g.restore();
+  }
+
+  const vignette = g.createRadialGradient(
+    W / 2, H / 2, H * .2,
+    W / 2, H / 2, W * .8
+  );
+
+  vignette.addColorStop(0, "#00000000");
+  vignette.addColorStop(1, "#17201950");
+
+  rect(0, 0, W, H, vignette);
+  g.restore();
+}
+
+function loop(timestamp) {
+  const dt = lastTime === null
+    ? 0
+    : Math.min((timestamp - lastTime) / 1000, .05);
+
+  lastTime = timestamp;
+
+  if (state === "running") update(dt);
+  else if (!$("settings").classList.contains("hidden")) updateVoice(dt);
+
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ===================== BUTTONS =====================
+
+$("play").onclick = startGame;
+$("pause").onclick = pauseGame;
+$("bomb").onclick = throwBomb;
+$("bat").onclick = swingBat;
+$("horn").onclick = horn;
+
+$("restart").onclick = () => {
+  resetGame();
+  startGame();
+};
+
+$("mute").onclick = () => {
+  muted = !muted;
+  $("mute").textContent = muted ? "Sound OFF" : "Sound ON";
+
+  initializeAudio();
+  mixAudio();
+};
+
+$("voiceVolume").oninput = mixAudio;
+$("effectsVolume").oninput = mixAudio;
+
+function openSettings() {
+  pauseGame();
+  $("settings").classList.remove("hidden");
+}
+
+$("settingsButton").onclick = openSettings;
+$("voiceTest").onclick = openSettings;
+
+$("closeSettings").onclick = () => {
+  stopVoice();
+  $("settings").classList.add("hidden");
+};
+
+document.querySelectorAll("[data-person]").forEach(button => {
+  button.onclick = () => {
+    initializeAudio();
+    stopVoice();
+    queueDialogue(button.dataset.person);
+
+    $("audioStatus").textContent = muted
+      ? "Sound OFF আছে—Sound ON করো।"
+      : "Recording চালানো হচ্ছে…";
+
+    playDialogue(voiceQueue.shift());
+  };
+});
+
+$("fullscreen").onclick = async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await $("gameArea").requestFullscreen();
+  } catch {
+    showToast("Fullscreen পাওয়া যাচ্ছে না");
+  }
+};
+
+// ===================== HOLD CONTROLS =====================
+
+for (const id of ["left", "right", "boost", "brake"]) {
+  const button = $(id);
+
+  button.addEventListener("pointerdown", event => {
+    event.preventDefault();
+    button.setPointerCapture(event.pointerId);
+
+    if (state === "running") {
+      held.add(id);
+      button.classList.add("held");
+    }
+  });
+
+  const release = () => {
+    held.delete(id);
+    button.classList.remove("held");
+  };
+
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("lostpointercapture", release);
+}
+
+// ===================== KEYBOARD =====================
+
+window.addEventListener("keydown", event => {
+  if (event.target instanceof HTMLInputElement) return;
+
+  const key = event.key.toLowerCase();
+
+  const controls = [
+    "arrowleft", "arrowright", "arrowup", "arrowdown",
+    "a", "d", "w", "s", " ", "j", "h", "p", "escape"
+  ];
+
+  if (!controls.includes(key)) return;
+
+  if (
+    key === " " &&
+    state !== "running" &&
+    event.target instanceof HTMLButtonElement
+  ) return;
+
+  event.preventDefault();
+
+  if (key === "p" || key === "escape") {
+    if (!event.repeat) {
+      if (state === "running") pauseGame();
+      else if (
+        state === "paused" &&
+        $("settings").classList.contains("hidden")
+      ) startGame();
+    }
+  } else if (key === " ") {
+    if (!event.repeat) throwBomb();
+  } else if (key === "j") {
+    if (!event.repeat) swingBat();
+  } else if (key === "h") {
+    if (!event.repeat) horn();
+  } else if (state === "running") {
+    keys.add(key);
+  }
+});
+
+window.addEventListener("keyup", event => {
+  keys.delete(event.key.toLowerCase());
+});
+
+window.addEventListener("blur", () => {
+  clearControls();
+  pauseGame();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    clearControls();
+    pauseGame();
+  }
+});
+
+window.addEventListener("resize", resize);
+
+window.addEventListener("beforeunload", () => {
+  stopVoice();
+  for (const url of selectedFiles.values()) URL.revokeObjectURL(url);
+});
+
+// ===================== START =====================
+
+resize();
+resetGame();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
